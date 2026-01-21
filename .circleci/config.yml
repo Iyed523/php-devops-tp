@@ -172,6 +172,9 @@ jobs:
     executor: builder-executor
     steps:
       - checkout
+
+      - setup_remote_docker
+
       - run:
           name: Install Infisical and Fetch Secrets
           command: |
@@ -193,7 +196,7 @@ jobs:
             infisical export --domain https://eu.infisical.com --projectId "$INFISICAL_PROJECT_ID" --token "$INF_TOKEN" --env dev > .env
 
             echo "Succès ! Le fichier .env a été créé."
-            cat .env 
+            cat .env
           docker_layer_caching: true
       - run:
           name: Build and Push Docker Image to GHCR (GitHub Container Registry)
