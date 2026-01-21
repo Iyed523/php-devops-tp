@@ -180,17 +180,18 @@ jobs:
             export INFISICAL_CLIENT_SECRET=$(echo "$INFISICAL_CLIENT_SECRET" | xargs)
             export INFISICAL_PROJECT_ID=$(echo "$INFISICAL_PROJECT_ID" | xargs)
 
-            # 2. Installation
-            curl -1sLf 'https://dl.cloudsmith.io/public/infisical/infisical-cli/setup.deb.sh' | sudo -E bash
-            sudo apt-get update && sudo apt-get install -y infisical
+            # 2. Installation VIA NPM (Pour avoir la dernière version stable)
+            sudo apt-get update && sudo apt-get install -y nodejs npm
+            sudo npm install -g infisical
 
             # 3. Authentification (EU)
+            echo "Connexion..."
             infisical login --domain https://eu.infisical.com --method=universal-auth --client-id "$INFISICAL_CLIENT_ID" --client-secret "$INFISICAL_CLIENT_SECRET" --silent
 
-            # 4. Configuration du projet
+            # 4. Configuration du projet (Lien avec ton Project ID)
             echo "{\"workspaceId\": \"$INFISICAL_PROJECT_ID\"}" > .infisical.json
 
-            # 5. Export (VERSION SIMPLIFIÉE)
+            # 5. Export
             infisical export --domain https://eu.infisical.com --env dev > .env
 
           docker_layer_caching: true
