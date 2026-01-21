@@ -185,15 +185,14 @@ jobs:
             sudo apt-get update && sudo apt-get install -y infisical
 
             # 3. Authentification (EU)
-            echo "Connexion en cours..."
             infisical login --domain https://eu.infisical.com --method=universal-auth --client-id "$INFISICAL_CLIENT_ID" --client-secret "$INFISICAL_CLIENT_SECRET" --silent
 
-            # 4. FIX: Création manuelle du fichier de config pour lier le projet
+            # 4. Configuration du projet
             echo "{\"workspaceId\": \"$INFISICAL_PROJECT_ID\"}" > .infisical.json
 
-            # 5. Export des secrets
-            infisical export --domain https://eu.infisical.com --env dev --format dotenv > .env      - setup_remote_docker:
-          #version: 20.10.23
+            # 5. Export (VERSION SIMPLIFIÉE)
+            infisical export --domain https://eu.infisical.com --env dev > .env
+
           docker_layer_caching: true
       - run:
           name: Build and Push Docker Image to GHCR (GitHub Container Registry)
