@@ -180,20 +180,19 @@ jobs:
             export INFISICAL_CLIENT_SECRET=$(echo "$INFISICAL_CLIENT_SECRET" | xargs)
             export INFISICAL_PROJECT_ID=$(echo "$INFISICAL_PROJECT_ID" | xargs)
 
-            # 2. Installation VIA NPM (Pour avoir la dernière version stable)
+            # 2. Installation VIA NPM (Avec le bon nom de paquet)
             sudo apt-get update && sudo apt-get install -y nodejs npm
-            sudo npm install -g infisical
+            sudo npm install -g @infisical/cli
 
             # 3. Authentification (EU)
             echo "Connexion..."
             infisical login --domain https://eu.infisical.com --method=universal-auth --client-id "$INFISICAL_CLIENT_ID" --client-secret "$INFISICAL_CLIENT_SECRET" --silent
 
-            # 4. Configuration du projet (Lien avec ton Project ID)
+            # 4. Configuration du projet
             echo "{\"workspaceId\": \"$INFISICAL_PROJECT_ID\"}" > .infisical.json
 
             # 5. Export
             infisical export --domain https://eu.infisical.com --env dev > .env
-
           docker_layer_caching: true
       - run:
           name: Build and Push Docker Image to GHCR (GitHub Container Registry)
