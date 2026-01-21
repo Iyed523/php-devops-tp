@@ -180,19 +180,21 @@ jobs:
             export INFISICAL_CLIENT_SECRET=$(echo "$INFISICAL_CLIENT_SECRET" | xargs)
             export INFISICAL_PROJECT_ID=$(echo "$INFISICAL_PROJECT_ID" | xargs)
 
-            # 2. Installation VIA NPM (Avec le bon nom de paquet)
-            sudo apt-get update && sudo apt-get install -y nodejs npm
+            # 2. Installation VIA NPM
+            sudo apt-get update
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs npm
             sudo npm install -g @infisical/cli
 
-            # 3. Authentification (EU)
-            echo "Connexion..."
-            infisical login --domain https://eu.infisical.com --method=universal-auth --client-id "$INFISICAL_CLIENT_ID" --client-secret "$INFISICAL_CLIENT_SECRET" --silent
+            # 3. Authentification & Capture du Token (Méthode directe)
+            # On ne stocke rien sur le disque. On récupère juste le texte du token.
+            echo "Récupération du token..."
+            INF_TOKEN=$(infisical login --domain https://eu.infisical.com --method=universal-auth --client-id "$INFISICAL_CLIENT_ID" --client-secret "$INFISICAL_CLIENT_SECRET" --plaintext --silent | grep -o 'eyJ[^"]*')
 
-            # 4. Configuration du projet
-            echo "{\"workspaceId\": \"$INFISICAL_PROJECT_ID\"}" > .infisical.json
+            # 4. Export (En utilisant le token capturé et l'ID du projet explicitement)
+            # On remet --projectId car on n'a plus de fichier de config local.
+            infisical export --domain https://eu.infisical.com --projectId "$INFISICAL_PROJECT_ID" --token "$INF_TOKEN" --env dev > .env
 
-            # 5. Export
-            infisical export --domain https://eu.infisical.com --env dev > .env
+            echo "Secrets exportés avec succès !"
           docker_layer_caching: true
       - run:
           name: Build and Push Docker Image to GHCR (GitHub Container Registry)
