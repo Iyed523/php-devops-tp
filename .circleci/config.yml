@@ -253,21 +253,21 @@ workflows:
                 - main
                 - master
                 - /^release\/.*/
-      - deploy-ssh-production:
-          requires:
-              - hold
-          filters:
-            branches:
-              only:
-                - main
-                - master
-  #   - deploy-ssh-staging:
-         # requires:
-          #  - hold
+      #- deploy-ssh-production:
+          #requires:
+              #- hold
           #filters:
-           # branches:
-            #  only:
-             #   - /^release\/.*/
+            #branches:
+              #only:
+                #- main
+                #- master
+     - deploy-ssh-staging:
+         requires:
+           - hold
+         filters:
+           branches:
+            only:
+              - /^release\/.*/
 
 
   container_workflow:
