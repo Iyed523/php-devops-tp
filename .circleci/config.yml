@@ -175,7 +175,7 @@ jobs:
       - run:
           name: Install Infisical and Fetch Secrets
           command: |
-            # 1. Nettoyage des variables (supprime les espaces invisibles avant/après)
+            # 1. Nettoyage des variables
             export INFISICAL_CLIENT_ID=$(echo "$INFISICAL_CLIENT_ID" | xargs)
             export INFISICAL_CLIENT_SECRET=$(echo "$INFISICAL_CLIENT_SECRET" | xargs)
             export INFISICAL_PROJECT_ID=$(echo "$INFISICAL_PROJECT_ID" | xargs)
@@ -184,13 +184,12 @@ jobs:
             curl -1sLf 'https://dl.cloudsmith.io/public/infisical/infisical-cli/setup.deb.sh' | sudo -E bash
             sudo apt-get update && sudo apt-get install -y infisical
 
-            # 3. Authentification (Login)
-            echo "Tentative de connexion avec ID: $INFISICAL_CLIENT_ID..."
-            infisical login --method=universal-auth --client-id "$INFISICAL_CLIENT_ID" --client-secret "$INFISICAL_CLIENT_SECRET" --silent
+            # 3. Authentification (VERSION EUROPE)
+            echo "Connexion au serveur EUROPE..."
+            infisical login --domain https://eu.infisical.com --method=universal-auth --client-id "$INFISICAL_CLIENT_ID" --client-secret "$INFISICAL_CLIENT_SECRET" --silent
 
-            # 4. Export du secret
-            infisical export --projectId "$INFISICAL_PROJECT_ID" --env dev --format dotenv > .env
-
+            # 4. Export (VERSION EUROPE)
+            infisical export --domain https://eu.infisical.com --projectId "$INFISICAL_PROJECT_ID" --env dev --format dotenv > .env
       - setup_remote_docker:
           #version: 20.10.23
           docker_layer_caching: true
