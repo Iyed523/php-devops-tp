@@ -185,16 +185,15 @@ jobs:
             sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs npm
             sudo npm install -g @infisical/cli
 
-            # 3. Authentification & Capture du Token (Méthode directe)
-            # On ne stocke rien sur le disque. On récupère juste le texte du token.
+            # 3. Authentification & Capture
             echo "Récupération du token..."
-            INF_TOKEN=$(infisical login --domain https://eu.infisical.com --method=universal-auth --client-id "$INFISICAL_CLIENT_ID" --client-secret "$INFISICAL_CLIENT_SECRET" --plaintext --silent | grep -o 'eyJ[^"]*')
+            export INF_TOKEN=$(infisical login --domain https://eu.infisical.com --method=universal-auth --client-id "$INFISICAL_CLIENT_ID" --client-secret "$INFISICAL_CLIENT_SECRET" --plain --silent)
 
-            # 4. Export (En utilisant le token capturé et l'ID du projet explicitement)
-            # On remet --projectId car on n'a plus de fichier de config local.
+            # 4. Export (Avec le token)
             infisical export --domain https://eu.infisical.com --projectId "$INFISICAL_PROJECT_ID" --token "$INF_TOKEN" --env dev > .env
 
-            echo "Secrets exportés avec succès !"
+            echo "Succès ! Le fichier .env a été créé."
+            cat .env 
           docker_layer_caching: true
       - run:
           name: Build and Push Docker Image to GHCR (GitHub Container Registry)
