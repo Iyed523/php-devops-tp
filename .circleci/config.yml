@@ -179,9 +179,12 @@ jobs:
       - run:
           name: Build and Push Docker Image
           command: |
-            # --- 1. INFISICAL (Récupération des secrets) ---
+            # IMPORTANT : Arrêter le script dès qu'une erreur survient
+            set -e
 
-            # Nettoyage des variables
+            # --- 1. INFISICAL ---
+
+            # Nettoyage
             export INFISICAL_CLIENT_ID=$(echo "$INFISICAL_CLIENT_ID" | xargs)
             export INFISICAL_CLIENT_SECRET=$(echo "$INFISICAL_CLIENT_SECRET" | xargs)
             export INFISICAL_PROJECT_ID=$(echo "$INFISICAL_PROJECT_ID" | xargs)
@@ -196,25 +199,37 @@ jobs:
             export INF_TOKEN=$(infisical login --domain https://eu.infisical.com --method=universal-auth --client-id "$INFISICAL_CLIENT_ID" --client-secret "$INFISICAL_CLIENT_SECRET" --plain --silent)
             infisical export --domain https://eu.infisical.com --projectId "$INFISICAL_PROJECT_ID" --token "$INF_TOKEN" --env dev > .env
 
-            # --- 2. DOCKER (Construction & Envoi) ---
+            # --- 2. DOCKER ---
 
-            # A. Charger les secrets (pour avoir DOCKER_USERNAME et PASSWORD)
+            # Chargement des variables
             set -a
             source .env
             set +a
 
-            # B. Se connecter à Docker Hub
+            # Debug : Vérifier si l'utilisateur est bien récupéré (Sans afficher le mot de passe)
+            if [ -z "$DOCKER_USERNAME" ]; then
+              echo "❌ ERREUR : La variable DOCKER_USERNAME est vide ou absente du fichier .env !"
+              echo "Contenu des clés du .env :"
+              cat .env | cut -d '=' -f 1 # Affiche seulement les noms des variables
+              exit 1
+            fi
+
+            # Connexion
+            echo "Connexion à Docker Hub pour l'utilisateur : $DOCKER_USERNAME"
             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
-            # C. Construire l'image
+            # Construction (CORRECTION DU CHEMIN ICI avec -f Docker/Dockerfile)
             echo "Construction de l'image..."
-            docker build -t iyedloghmaari4/php-devops-tp:latest .
+            docker build -f Docker/Dockerfile -t iyedloghmaari4/php-devops-tp:latest .
 
-            # D. Envoyer l'image
+            # Envoi
             echo "Envoi vers Docker Hub..."
             docker push iyedloghmaari4/php-devops-tp:latest
 
-            echo "✅ Succès ! Image envoyée sur Docker Hub."
+            echo "✅ Succès ! Image envoyée."
+
+
+
       #- run:
           #name: Build and Push Docker Image to GHCR (GitHub Container Registry)
           #command: |
