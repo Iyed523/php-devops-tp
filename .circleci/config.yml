@@ -292,7 +292,7 @@ jobs:
 
             # 3. Connexion SSH et commandes Docker
             echo "Connexion au serveur AWS ($STAGING_SSH_HOST)..."
-            ssh -o StrictHostKeyChecking=no $STAGING_SSH_USER@$STAGING_SSH_HOST << EOF
+            ssh -o StrictHostKeyChecking=no $STAGING_SSH_USER@$STAGING_SSH_HOST \<< EOF
               echo "✅ Connecté au serveur !"
 
               # A. Install Docker si besoin
@@ -310,7 +310,7 @@ jobs:
               sudo docker stop mon-site-web || true
               sudo docker rm mon-site-web || true
               sudo docker run -d -p 80:80 --name mon-site-web iyedloghmaari4/php-devops-tp:latest
-              
+
               echo "🚀 Site déployé !"
             EOF
 
