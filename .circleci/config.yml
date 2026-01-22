@@ -267,8 +267,7 @@ jobs:
 
 #  deploy-ssh-production:
 # It's up to you :)
-
-deploy-ssh-staging:
+  deploy-ssh-staging:
     executor: builder-executor
     steps:
       - add_ssh_keys:
