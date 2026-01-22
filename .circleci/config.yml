@@ -264,29 +264,30 @@ jobs:
 
 
   # --- NOUVEAUX JOBS DE QUALITÉ ---
-  
+
   analyze-phploc:
     executor: builder-executor
     steps:
       - checkout
       - run:
-          name: Run PHPLOC (Taille du projet)
+          name: Run PHPLOC (Via PHAR)
           command: |
-            # Installation temporaire via Phive ou Composer
-            sudo composer self-update
-            composer require --dev phploc/phploc
-            ./vendor/bin/phploc src/
+            # On télécharge l'outil directement pour éviter les conflits Composer
+            wget -O phploc.phar https://phar.phpunit.de/phploc.phar
+
+            # On lance l'analyse
+            php phploc.phar src/
 
   analyze-phpmetrics:
     executor: builder-executor
     steps:
       - checkout
       - run:
-          name: Run PHPMetrics (Rapport HTML)
+          name: Run PHPMetrics
           command: |
-            composer require --dev phpmetrics/phpmetrics
+            # On force l'installation avec toutes les dépendances nécessaires
+            composer require --dev phpmetrics/phpmetrics --with-all-dependencies
             mkdir -p build/phpmetrics
-            # Analyse du dossier src
             ./vendor/bin/phpmetrics --report-html=build/phpmetrics src/
       - store_artifacts:
           path: build/phpmetrics
