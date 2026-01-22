@@ -315,10 +315,6 @@ deploy-ssh-staging:
               echo "🚀 Site déployé !"
             EOF
 
-  deploy-ssh-production:
-    executor: builder-executor
-    steps:
-      - run: echo "À faire plus tard..."
 
 workflows:
   main_workflow:
