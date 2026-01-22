@@ -278,12 +278,12 @@ deploy-ssh-staging:
       - run:
           name: Deploy to AWS EC2
           command: |
-            # Installation Infisical
+            # 1. Installation des outils (Infisical)
             sudo apt-get update
             sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs npm
             sudo npm install -g @infisical/cli
 
-            # Récupération des secrets
+            # 2. Récupération des secrets
             echo "Récupération des identifiants..."
             export INF_TOKEN=$(infisical login --domain https://eu.infisical.com --method=universal-auth --client-id "$INFISICAL_CLIENT_ID" --client-secret "$INFISICAL_CLIENT_SECRET" --plain --silent)
             infisical export --domain https://eu.infisical.com --projectId "$INFISICAL_PROJECT_ID" --token "$INF_TOKEN" --env dev > .env
@@ -291,34 +291,35 @@ deploy-ssh-staging:
             source .env
             set +a
 
-            # Déploiement via SSH
+            # 3. Connexion SSH et commandes Docker
             echo "Connexion au serveur AWS ($STAGING_SSH_HOST)..."
             ssh -o StrictHostKeyChecking=no $STAGING_SSH_USER@$STAGING_SSH_HOST << EOF
               echo "✅ Connecté au serveur !"
 
-              # Install Docker si besoin
+              # A. Install Docker si besoin
               if ! command -v docker &> /dev/null; then
                   sudo apt-get update && sudo apt-get install -y docker.io
                   sudo systemctl start docker && sudo systemctl enable docker
                   sudo usermod -aG docker ubuntu
               fi
 
-              # Login & Update
+              # B. Login & Update
               echo "$DOCKER_PASSWORD" | sudo docker login -u "$DOCKER_USERNAME" --password-stdin
               sudo docker pull iyedloghmaari4/php-devops-tp:latest
 
-              # Restart Container
+              # C. Restart Container
               sudo docker stop mon-site-web || true
               sudo docker rm mon-site-web || true
               sudo docker run -d -p 80:80 --name mon-site-web iyedloghmaari4/php-devops-tp:latest
-
-              echo "Site déployé !"
+              
+              echo "🚀 Site déployé !"
             EOF
 
   deploy-ssh-production:
     executor: builder-executor
     steps:
       - run: echo "À faire plus tard..."
+
 workflows:
   main_workflow:
     jobs:
@@ -333,22 +334,6 @@ workflows:
       - test-phpunit:
           requires:
             - build-setup
-      - hold:
-          type: approval
-          filters:
-            branches:
-              only:
-                - main
-                - master
-                - /^release\/.*/
-#      - deploy-ssh-production:
-#          requires:
-#              - hold
-#          filters:
-#            branches:
-#              only:
-#                - main
-#                - master
 
   container_workflow:
     jobs:
@@ -356,17 +341,17 @@ workflows:
           filters:
             branches:
               only:
-                - master
                 - main
+                - master
                 - develop
                 - /^feature\/.*/
                 - /^release\/.*/
                 - /^hotfix\/.*/
                 - /^bugfix\/.*/
-
+      
       - deploy-ssh-staging:
           requires:
-            - build-docker-image  # Maintenant ils se voient !
+            - build-docker-image
           filters:
             branches:
               only:
