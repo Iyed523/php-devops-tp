@@ -173,31 +173,48 @@ jobs:
     steps:
       - checkout
 
-      - setup_remote_docker
+      - setup_remote_docker:
+          docker_layer_caching: true
 
       - run:
-          name: Install Infisical and Fetch Secrets
+          name: Build and Push Docker Image
           command: |
-            # 1. Nettoyage des variables
+            # --- 1. INFISICAL (Récupération des secrets) ---
+
+            # Nettoyage des variables
             export INFISICAL_CLIENT_ID=$(echo "$INFISICAL_CLIENT_ID" | xargs)
             export INFISICAL_CLIENT_SECRET=$(echo "$INFISICAL_CLIENT_SECRET" | xargs)
             export INFISICAL_PROJECT_ID=$(echo "$INFISICAL_PROJECT_ID" | xargs)
 
-            # 2. Installation VIA NPM
+            # Installation
             sudo apt-get update
             sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs npm
             sudo npm install -g @infisical/cli
 
-            # 3. Authentification & Capture
-            echo "Récupération du token..."
+            # Connexion & Export
+            echo "Récupération des secrets..."
             export INF_TOKEN=$(infisical login --domain https://eu.infisical.com --method=universal-auth --client-id "$INFISICAL_CLIENT_ID" --client-secret "$INFISICAL_CLIENT_SECRET" --plain --silent)
-
-            # 4. Export (Avec le token)
             infisical export --domain https://eu.infisical.com --projectId "$INFISICAL_PROJECT_ID" --token "$INF_TOKEN" --env dev > .env
 
-            echo "Succès ! Le fichier .env a été créé."
-            cat .env
-          docker_layer_caching: true
+            # --- 2. DOCKER (Construction & Envoi) ---
+
+            # A. Charger les secrets (pour avoir DOCKER_USERNAME et PASSWORD)
+            set -a
+            source .env
+            set +a
+
+            # B. Se connecter à Docker Hub
+            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+
+            # C. Construire l'image
+            echo "Construction de l'image..."
+            docker build -t iyedloghmaari4/php-devops-tp:latest .
+
+            # D. Envoyer l'image
+            echo "Envoi vers Docker Hub..."
+            docker push iyedloghmaari4/php-devops-tp:latest
+
+            echo "✅ Succès ! Image envoyée sur Docker Hub."
       - run:
           name: Build and Push Docker Image to GHCR (GitHub Container Registry)
           command: |
