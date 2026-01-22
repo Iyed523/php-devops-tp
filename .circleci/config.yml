@@ -263,7 +263,45 @@ jobs:
             #docker push $REPOSITORY:$TAG
 
 
+  # --- NOUVEAUX JOBS DE QUALITÉ ---
+  
+  analyze-phploc:
+    executor: builder-executor
+    steps:
+      - checkout
+      - run:
+          name: Run PHPLOC (Taille du projet)
+          command: |
+            # Installation temporaire via Phive ou Composer
+            sudo composer self-update
+            composer require --dev phploc/phploc
+            ./vendor/bin/phploc src/
 
+  analyze-phpmetrics:
+    executor: builder-executor
+    steps:
+      - checkout
+      - run:
+          name: Run PHPMetrics (Rapport HTML)
+          command: |
+            composer require --dev phpmetrics/phpmetrics
+            mkdir -p build/phpmetrics
+            # Analyse du dossier src
+            ./vendor/bin/phpmetrics --report-html=build/phpmetrics src/
+      - store_artifacts:
+          path: build/phpmetrics
+
+  analyze-phpmd:
+    executor: builder-executor
+    steps:
+      - checkout
+      - run:
+          name: Run PHPMD (Mess Detector)
+          command: |
+            composer require --dev phpmd/phpmd
+            # On scanne le dossier src en format texte avec plusieurs règles
+            # Le "|| true" permet de ne pas bloquer le pipeline si des erreurs mineures sont trouvées
+            ./vendor/bin/phpmd src/ text cleancode,codesize,controversial,design,naming,unusedcode || true
 
 #  deploy-ssh-production:
 # It's up to you :)
@@ -327,6 +365,17 @@ workflows:
           requires:
             - build-setup
       - test-phpunit:
+          requires:
+            - build-setup
+
+      # --- LES NOUVEAUX JOBS ---
+      - analyze-phploc:
+          requires:
+            - build-setup
+      - analyze-phpmetrics:
+          requires:
+            - build-setup
+      - analyze-phpmd:
           requires:
             - build-setup
 
